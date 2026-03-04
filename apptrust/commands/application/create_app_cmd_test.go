@@ -43,9 +43,9 @@ func TestCreateAppCommand_Run_Flags(t *testing.T) {
 		Description:         &description,
 		BusinessCriticality: &businessCriticality,
 		MaturityLevel:       &maturityLevel,
-		Labels: &map[string]string{
-			"env":    "prod",
-			"region": "us-east",
+		Labels: &[]model.LabelEntry{
+			{Key: "env", Value: "prod"},
+			{Key: "region", Value: "us-east"},
 		},
 		UserOwners:  &[]string{"john.doe", "jane.smith"},
 		GroupOwners: &[]string{"devops", "security"},
@@ -149,10 +149,10 @@ func TestCreateAppCommand_Run_FullSpecFile(t *testing.T) {
 		Description:         &expectedDescription,
 		MaturityLevel:       &expectedMaturityLevel,
 		BusinessCriticality: &expectedBusinessCriticality,
-		Labels: &map[string]string{
-			"environment": "production",
-			"region":      "us-east-1",
-			"team":        "devops",
+		Labels: &[]model.LabelEntry{
+			{Key: "environment", Value: "production"},
+			{Key: "region", Value: "us-east-1"},
+			{Key: "team", Value: "devops"},
 		},
 		UserOwners:  &[]string{"john.doe", "jane.smith"},
 		GroupOwners: &[]string{"devops-team", "security-team"},
@@ -281,9 +281,9 @@ func TestCreateAppCommand_Run_SpecVars(t *testing.T) {
 		Description:         &expectedDescription,
 		MaturityLevel:       &expectedMaturityLevel,
 		BusinessCriticality: &expectedBusinessCriticality,
-		Labels: &map[string]string{
-			"environment": "production",
-			"region":      "us-east-1",
+		Labels: &[]model.LabelEntry{
+			{Key: "environment", Value: "production"},
+			{Key: "region", Value: "us-east-1"},
 		},
 	}
 
