@@ -151,6 +151,7 @@ func TestCreateAppCommand_Run_FullSpecFile(t *testing.T) {
 		BusinessCriticality: &expectedBusinessCriticality,
 		Labels: &[]model.LabelEntry{
 			{Key: "environment", Value: "production"},
+			{Key: "environment", Value: "staging"},
 			{Key: "region", Value: "us-east-1"},
 			{Key: "team", Value: "devops"},
 		},

@@ -4,11 +4,24 @@
   "description": "A comprehensive test application",
   "maturity_level": "production",
   "criticality": "high",
-  "labels": {
-    "environment": "production",
-    "region": "us-east-1",
-    "team": "devops"
-  },
+  "labels": [
+    {
+      "key": "environment",
+      "value": "production"
+    },
+    {
+      "key": "environment",
+      "value": "staging"
+    },
+    {
+      "key": "region",
+      "value": "us-east-1"
+    },
+    {
+      "key": "team",
+      "value": "devops"
+    }
+  ],
   "user_owners": [
     "john.doe",
     "jane.smith"
