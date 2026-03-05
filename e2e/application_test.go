@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	"github.com/jfrog/jfrog-cli-application/e2e/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -40,7 +41,7 @@ func TestCreateApp(t *testing.T) {
 	assert.Equal(t, description, *app.Description)
 	assert.Equal(t, businessCriticality, *app.BusinessCriticality)
 	assert.Equal(t, maturityLevel, *app.MaturityLevel)
-	assert.Equal(t, map[string]string{"env": "prod", "team": "devops"}, *app.Labels)
+	assert.ElementsMatch(t, []model.LabelEntry{{Key: "env", Value: "prod"}, {Key: "team", Value: "devops"}}, *app.Labels)
 	assert.Equal(t, userOwners, *app.UserOwners)
 	assert.Equal(t, groupOwners, *app.GroupOwners)
 
@@ -79,7 +80,7 @@ func TestUpdateApp(t *testing.T) {
 	assert.Equal(t, updatedDescription, *app.Description)
 	assert.Equal(t, updatedBusinessCriticality, *app.BusinessCriticality)
 	assert.Equal(t, updatedMaturityLevel, *app.MaturityLevel)
-	assert.Equal(t, map[string]string{"env": "qa", "team": "dev"}, *app.Labels)
+	assert.ElementsMatch(t, []model.LabelEntry{{Key: "env", Value: "qa"}, {Key: "team", Value: "dev"}}, *app.Labels)
 	assert.Equal(t, updatedUserOwners, *app.UserOwners)
 	assert.Equal(t, updatedGroupOwners, *app.GroupOwners)
 
