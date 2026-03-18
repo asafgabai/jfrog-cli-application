@@ -168,12 +168,12 @@ func ParseListPropertiesFlag(propertiesStr string) (map[string][]string, error) 
 	return result, nil
 }
 
-func ParseLabelKeyValuePairs(flagValue string) ([]model.LabelKeyValue, error) {
+func ParseLabelKeyValuePairs(flagValue string) ([]model.LabelEntry, error) {
 	if flagValue == "" {
-		return []model.LabelKeyValue{}, nil
+		return []model.LabelEntry{}, nil
 	}
 
-	var result []model.LabelKeyValue
+	var result []model.LabelEntry
 	pairs := strings.Split(flagValue, ";")
 	for _, pair := range pairs {
 		trimmedPair := strings.TrimSpace(pair)
@@ -184,7 +184,7 @@ func ParseLabelKeyValuePairs(flagValue string) ([]model.LabelKeyValue, error) {
 		if len(keyValue) != 2 {
 			return nil, errorutils.CheckErrorf("invalid key-value pair: '%s' (expected format key=value)", pair)
 		}
-		result = append(result, model.LabelKeyValue{
+		result = append(result, model.LabelEntry{
 			Key:   strings.TrimSpace(keyValue[0]),
 			Value: strings.TrimSpace(keyValue[1]),
 		})

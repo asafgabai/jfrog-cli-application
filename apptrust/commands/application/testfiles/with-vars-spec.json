@@ -4,8 +4,14 @@
   "description": "A test application for ${ENVIRONMENT}",
   "maturity_level": "${MATURITY_LEVEL}",
   "criticality": "${CRITICALITY}",
-  "labels": {
-    "environment": "${ENVIRONMENT}",
-    "region": "${REGION}"
-  }
+  "labels": [
+    {
+      "key": "environment",
+      "value": "${ENVIRONMENT}"
+    },
+    {
+      "key": "region",
+      "value": "${REGION}"
+    }
+  ]
 } 

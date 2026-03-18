@@ -44,11 +44,11 @@ func populateApplicationFromFlags(ctx *components.Context, descriptor *model.App
 	}
 
 	if ctx.IsFlagSet(commands.LabelsFlag) {
-		labelsMap, err := utils.ParseMapFlag(ctx.GetStringFlagValue(commands.LabelsFlag))
+		labels, err := utils.ParseLabelKeyValuePairs(ctx.GetStringFlagValue(commands.LabelsFlag))
 		if err != nil {
 			return fmt.Errorf("failed to parse --%s: %w", commands.LabelsFlag, err)
 		}
-		descriptor.Labels = &labelsMap
+		descriptor.Labels = &labels
 	}
 
 	// Only set LabelUpdates if at least one of add-labels or remove-labels flags is set

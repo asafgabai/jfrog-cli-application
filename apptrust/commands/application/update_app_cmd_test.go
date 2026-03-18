@@ -31,9 +31,9 @@ func TestUpdateAppCommand_Run(t *testing.T) {
 		Description:         &description,
 		MaturityLevel:       &maturityLevel,
 		BusinessCriticality: &businessCriticality,
-		Labels: &map[string]string{
-			"environment": "production",
-			"region":      "us-east",
+		Labels: &[]model.LabelEntry{
+			{Key: "environment", Value: "production"},
+			{Key: "region", Value: "us-east"},
 		},
 		UserOwners:  &[]string{"JohnD", "Dave Rice"},
 		GroupOwners: &[]string{"DevOps"},
@@ -67,9 +67,9 @@ func TestUpdateAppCommand_Run_Error(t *testing.T) {
 		Description:         &description,
 		MaturityLevel:       &maturityLevel,
 		BusinessCriticality: &businessCriticality,
-		Labels: &map[string]string{
-			"environment": "production",
-			"region":      "us-east",
+		Labels: &[]model.LabelEntry{
+			{Key: "environment", Value: "production"},
+			{Key: "region", Value: "us-east"},
 		},
 		UserOwners:  &[]string{"JohnD", "Dave Rice"},
 		GroupOwners: &[]string{"DevOps"},
@@ -127,7 +127,7 @@ func TestUpdateAppCommand_FlagsSuite(t *testing.T) {
 			expectsPayload: &model.AppDescriptor{
 				ApplicationKey: "app-key",
 				LabelUpdates: &model.LabelUpdates{
-					Add: []model.LabelKeyValue{
+					Add: []model.LabelEntry{
 						{Key: "environment", Value: "production"},
 					},
 				},
@@ -142,7 +142,7 @@ func TestUpdateAppCommand_FlagsSuite(t *testing.T) {
 			expectsPayload: &model.AppDescriptor{
 				ApplicationKey: "app-key",
 				LabelUpdates: &model.LabelUpdates{
-					Add: []model.LabelKeyValue{
+					Add: []model.LabelEntry{
 						{Key: "environment", Value: "production"},
 						{Key: "region", Value: "us-east"},
 					},
@@ -158,7 +158,7 @@ func TestUpdateAppCommand_FlagsSuite(t *testing.T) {
 			expectsPayload: &model.AppDescriptor{
 				ApplicationKey: "app-key",
 				LabelUpdates: &model.LabelUpdates{
-					Add: []model.LabelKeyValue{
+					Add: []model.LabelEntry{
 						{Key: "environment", Value: "production"},
 						{Key: "environment", Value: "staging"},
 						{Key: "region", Value: "us-east"},
@@ -175,7 +175,7 @@ func TestUpdateAppCommand_FlagsSuite(t *testing.T) {
 			expectsPayload: &model.AppDescriptor{
 				ApplicationKey: "app-key",
 				LabelUpdates: &model.LabelUpdates{
-					Remove: []model.LabelKeyValue{
+					Remove: []model.LabelEntry{
 						{Key: "infra-version", Value: "v1.0"},
 					},
 				},
@@ -190,7 +190,7 @@ func TestUpdateAppCommand_FlagsSuite(t *testing.T) {
 			expectsPayload: &model.AppDescriptor{
 				ApplicationKey: "app-key",
 				LabelUpdates: &model.LabelUpdates{
-					Remove: []model.LabelKeyValue{
+					Remove: []model.LabelEntry{
 						{Key: "infra-version", Value: "v1.0"},
 						{Key: "region", Value: "us-west"},
 					},
@@ -207,12 +207,12 @@ func TestUpdateAppCommand_FlagsSuite(t *testing.T) {
 			expectsPayload: &model.AppDescriptor{
 				ApplicationKey: "app-key",
 				LabelUpdates: &model.LabelUpdates{
-					Add: []model.LabelKeyValue{
+					Add: []model.LabelEntry{
 						{Key: "environment", Value: "production"},
 						{Key: "environment", Value: "staging"},
 						{Key: "region", Value: "us-east"},
 					},
-					Remove: []model.LabelKeyValue{
+					Remove: []model.LabelEntry{
 						{Key: "infra-version", Value: "v1.0"},
 						{Key: "region", Value: "us-west"},
 					},
@@ -246,10 +246,10 @@ func TestUpdateAppCommand_FlagsSuite(t *testing.T) {
 				Description:     stringPtr("Updated description"),
 				MaturityLevel:   stringPtr("production"),
 				LabelUpdates: &model.LabelUpdates{
-					Add: []model.LabelKeyValue{
+					Add: []model.LabelEntry{
 						{Key: "environment", Value: "production"},
 					},
-					Remove: []model.LabelKeyValue{
+					Remove: []model.LabelEntry{
 						{Key: "old-label", Value: "old-value"},
 					},
 				},
@@ -282,7 +282,7 @@ func TestUpdateAppCommand_FlagsSuite(t *testing.T) {
 			expectsPayload: &model.AppDescriptor{
 				ApplicationKey: "app-key",
 				LabelUpdates: &model.LabelUpdates{
-					Add: []model.LabelKeyValue{
+					Add: []model.LabelEntry{
 						{Key: "key1", Value: "value1"},
 						{Key: "key2", Value: "value2"},
 					},
@@ -299,8 +299,8 @@ func TestUpdateAppCommand_FlagsSuite(t *testing.T) {
 			expectsPayload: &model.AppDescriptor{
 				ApplicationKey: "app-key",
 				LabelUpdates: &model.LabelUpdates{
-					Add: []model.LabelKeyValue{},
-					Remove: []model.LabelKeyValue{
+					Add: []model.LabelEntry{},
+					Remove: []model.LabelEntry{
 						{Key: "key", Value: "value"},
 					},
 				},
@@ -316,10 +316,10 @@ func TestUpdateAppCommand_FlagsSuite(t *testing.T) {
 			expectsPayload: &model.AppDescriptor{
 				ApplicationKey: "app-key",
 				LabelUpdates: &model.LabelUpdates{
-					Add: []model.LabelKeyValue{
+					Add: []model.LabelEntry{
 						{Key: "key", Value: "value"},
 					},
-					Remove: []model.LabelKeyValue{},
+					Remove: []model.LabelEntry{},
 				},
 			},
 		},

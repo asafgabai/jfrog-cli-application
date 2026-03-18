@@ -169,62 +169,62 @@ func TestParseLabelKeyValuePairs(t *testing.T) {
 	tests := []struct {
 		name      string
 		input     string
-		expected  []model.LabelKeyValue
+		expected  []model.LabelEntry
 		expectErr bool
 		errorMsg  string
 	}{
 		{
 			name:      "empty string",
 			input:     "",
-			expected:  []model.LabelKeyValue{},
+			expected:  []model.LabelEntry{},
 			expectErr: false,
 		},
 		{
 			name:      "single pair",
 			input:     "key1=value1",
-			expected:  []model.LabelKeyValue{{Key: "key1", Value: "value1"}},
+			expected:  []model.LabelEntry{{Key: "key1", Value: "value1"}},
 			expectErr: false,
 		},
 		{
 			name:      "multiple pairs",
 			input:     "key1=value1;key2=value2;key3=value3",
-			expected:  []model.LabelKeyValue{{Key: "key1", Value: "value1"}, {Key: "key2", Value: "value2"}, {Key: "key3", Value: "value3"}},
+			expected:  []model.LabelEntry{{Key: "key1", Value: "value1"}, {Key: "key2", Value: "value2"}, {Key: "key3", Value: "value3"}},
 			expectErr: false,
 		},
 		{
 			name:      "same key multiple values",
 			input:     "environment=production;environment=staging;region=us-east",
-			expected:  []model.LabelKeyValue{{Key: "environment", Value: "production"}, {Key: "environment", Value: "staging"}, {Key: "region", Value: "us-east"}},
+			expected:  []model.LabelEntry{{Key: "environment", Value: "production"}, {Key: "environment", Value: "staging"}, {Key: "region", Value: "us-east"}},
 			expectErr: false,
 		},
 		{
 			name:      "whitespace handling",
 			input:     " key1 = value1 ; key2 = value2 ",
-			expected:  []model.LabelKeyValue{{Key: "key1", Value: "value1"}, {Key: "key2", Value: "value2"}},
+			expected:  []model.LabelEntry{{Key: "key1", Value: "value1"}, {Key: "key2", Value: "value2"}},
 			expectErr: false,
 		},
 		{
 			name:      "empty pairs skipped",
 			input:     "key1=value1;;key2=value2",
-			expected:  []model.LabelKeyValue{{Key: "key1", Value: "value1"}, {Key: "key2", Value: "value2"}},
+			expected:  []model.LabelEntry{{Key: "key1", Value: "value1"}, {Key: "key2", Value: "value2"}},
 			expectErr: false,
 		},
 		{
 			name:      "leading and trailing separators",
 			input:     ";key1=value1;key2=value2;",
-			expected:  []model.LabelKeyValue{{Key: "key1", Value: "value1"}, {Key: "key2", Value: "value2"}},
+			expected:  []model.LabelEntry{{Key: "key1", Value: "value1"}, {Key: "key2", Value: "value2"}},
 			expectErr: false,
 		},
 		{
 			name:      "empty value",
 			input:     "key1=;key2=value2",
-			expected:  []model.LabelKeyValue{{Key: "key1", Value: ""}, {Key: "key2", Value: "value2"}},
+			expected:  []model.LabelEntry{{Key: "key1", Value: ""}, {Key: "key2", Value: "value2"}},
 			expectErr: false,
 		},
 		{
 			name:      "value with equals sign",
 			input:     "key1=value=with=equals;key2=normal",
-			expected:  []model.LabelKeyValue{{Key: "key1", Value: "value=with=equals"}, {Key: "key2", Value: "normal"}},
+			expected:  []model.LabelEntry{{Key: "key1", Value: "value=with=equals"}, {Key: "key2", Value: "normal"}},
 			expectErr: false,
 		},
 		{
@@ -242,19 +242,19 @@ func TestParseLabelKeyValuePairs(t *testing.T) {
 		{
 			name:      "empty key",
 			input:     "=value1;key2=value2",
-			expected:  []model.LabelKeyValue{{Key: "", Value: "value1"}, {Key: "key2", Value: "value2"}},
+			expected:  []model.LabelEntry{{Key: "", Value: "value1"}, {Key: "key2", Value: "value2"}},
 			expectErr: false,
 		},
 		{
 			name:      "whitespace only pairs skipped",
 			input:     "key1=value1;   ;key2=value2",
-			expected:  []model.LabelKeyValue{{Key: "key1", Value: "value1"}, {Key: "key2", Value: "value2"}},
+			expected:  []model.LabelEntry{{Key: "key1", Value: "value1"}, {Key: "key2", Value: "value2"}},
 			expectErr: false,
 		},
 		{
 			name:      "special characters in key and value",
 			input:     "env-name=prod-env;region=us-east-1",
-			expected:  []model.LabelKeyValue{{Key: "env-name", Value: "prod-env"}, {Key: "region", Value: "us-east-1"}},
+			expected:  []model.LabelEntry{{Key: "env-name", Value: "prod-env"}, {Key: "region", Value: "us-east-1"}},
 			expectErr: false,
 		},
 	}
