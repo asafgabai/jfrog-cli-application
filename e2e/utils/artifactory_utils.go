@@ -125,7 +125,20 @@ func uploadPackageToArtifactory(t *testing.T, repoKey, buildName, buildNumber st
 	return artifactDetails.Checksums.Sha256
 }
 
-func uploadSimpleFileToArtifactory(t *testing.T, repoKey, targetFileName string) string {
+func CreateGenericRepoWithEnv(t *testing.T, suffix string, environments []string) string {
+	servicesManager := getArtifactoryServicesManager(t)
+	repoKey := GetTestProjectKey(t) + "-" + suffix
+	localRepoConfig := services.NewGenericLocalRepositoryParams()
+	localRepoConfig.ProjectKey = GetTestProjectKey(t)
+	localRepoConfig.Key = repoKey
+	localRepoConfig.Environments = environments
+	err := servicesManager.CreateLocalRepository().Generic(localRepoConfig)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = servicesManager.DeleteRepository(repoKey) })
+	return repoKey
+}
+
+func UploadTestArtifact(t *testing.T, repoKey, targetFileName string) string {
 	tmpFile, err := os.CreateTemp("", "e2e-artifact-*.txt")
 	require.NoError(t, err)
 	_, err = tmpFile.WriteString("test-artifact-content")
@@ -146,6 +159,8 @@ func uploadSimpleFileToArtifactory(t *testing.T, repoKey, targetFileName string)
 	require.Equal(t, 0, summary.TotalFailed, "Expected zero failed uploads")
 	err = summary.Close()
 	require.NoError(t, err)
+
+	reindexRepo(t, repoKey)
 
 	return targetPath
 }

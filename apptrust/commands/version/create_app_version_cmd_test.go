@@ -174,6 +174,24 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			},
 		},
 		{
+			name: "skip-unassigned flag",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key", "1.0.0"}
+				ctx.AddBoolFlag(commands.SkipUnassignedFlag, true)
+				ctx.AddStringFlag(commands.SourceTypePackagesFlag, "type=npm,name=pkg1,version=1.0.0,repo-key=repo1")
+			},
+			expectsPayload: &model.CreateAppVersionRequest{
+				ApplicationKey: "app-key",
+				Version:        "1.0.0",
+				SkipUnassigned: true,
+				Sources: &model.CreateVersionSources{
+					Packages: []model.CreateVersionPackage{
+						{Type: "npm", Name: "pkg1", Version: "1.0.0", Repository: "repo1"},
+					},
+				},
+			},
+		},
+		{
 			name: "spec only",
 			ctxSetup: func(ctx *components.Context) {
 				ctx.Arguments = []string{"app-key", "1.0.0"}

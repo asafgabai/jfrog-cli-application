@@ -196,6 +196,66 @@ func TestCreateVersion_Draft(t *testing.T) {
 	assert.Equal(t, utils.StatusDraft, versionContent.Status)
 }
 
+type skipUnassignedResponse struct {
+	ApplicationKey string `json:"application_key"`
+	Version        string `json:"version"`
+	Status         string `json:"status"`
+	CurrentStage   string `json:"current_stage"`
+	Message        string `json:"message"`
+}
+
+func TestCreateVersion_SkipUnassigned(t *testing.T) {
+	appKey := utils.GenerateUniqueKey("app-version-skip-unassigned")
+	utils.CreateBasicApplication(t, appKey)
+	defer utils.DeleteApplication(t, appKey)
+
+	t.Run("auto-promotes when source repo is mapped to first stage", func(t *testing.T) {
+		version := utils.GenerateUniqueKey("skip-ua-ok")
+
+		testPackage := utils.GetTestPackage(t)
+		packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+			testPackage.PackageType, testPackage.PackageName, testPackage.PackageVersion, testPackage.RepoKey)
+		output := utils.AppTrustCli.RunCliCmdWithOutput(t, "version-create", appKey, version, packageFlag, "--skip-unassigned", "--sync")
+		defer utils.DeleteApplicationVersion(t, appKey, version)
+
+		require.NotEmpty(t, output)
+
+		var response skipUnassignedResponse
+		err := json.Unmarshal([]byte(output), &response)
+		require.NoError(t, err, "failed to parse CLI output as JSON: %s", output)
+		assert.Equal(t, appKey, response.ApplicationKey)
+		assert.Equal(t, version, response.Version)
+		assert.Empty(t, response.Message, "No message means auto-promote succeeded")
+
+		versionContent, statusCode, err := utils.GetApplicationVersion(appKey, version)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, statusCode)
+		require.NotNil(t, versionContent)
+		assert.Equal(t, "DEV", versionContent.CurrentStage, "Version should be auto-promoted to DEV stage")
+	})
+
+	t.Run("stays unassigned with message when artifact not in first stage", func(t *testing.T) {
+		version := utils.GenerateUniqueKey("skip-ua-fail")
+
+		repoKey := utils.CreateGenericRepoWithEnv(t, "prod-only-local", []string{"PROD"})
+		artifactPath := utils.UploadTestArtifact(t, repoKey, "mismatch-artifact.txt")
+
+		artifactFlag := fmt.Sprintf("--source-type-artifacts=path=%s", artifactPath)
+		output := utils.AppTrustCli.RunCliCmdWithOutput(t, "version-create", appKey, version, artifactFlag, "--skip-unassigned", "--sync")
+		defer utils.DeleteApplicationVersion(t, appKey, version)
+
+		require.NotEmpty(t, output)
+
+		var response skipUnassignedResponse
+		err := json.Unmarshal([]byte(output), &response)
+		require.NoError(t, err, "failed to parse CLI output as JSON: %s", output)
+		assert.Equal(t, appKey, response.ApplicationKey)
+		assert.Equal(t, version, response.Version)
+		require.NotEmpty(t, response.Message, "A message should explain why auto-promotion did not occur")
+		assert.Contains(t, response.Message, "not all source artifacts are in repositories mapped to the first stage")
+	})
+}
+
 func TestCreateVersion_Async(t *testing.T) {
 	appKey := utils.GenerateUniqueKey("app-version-create-async")
 	utils.CreateBasicApplication(t, appKey)
