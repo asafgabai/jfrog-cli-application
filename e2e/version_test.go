@@ -435,6 +435,60 @@ func TestPromoteVersion(t *testing.T) {
 	assert.Equal(t, targetStage, versionContent.CurrentStage)
 }
 
+func TestPromoteVersion_WithPathMappings(t *testing.T) {
+	t.Skip("Skipping until path-mapping backend is deployed")
+	// Prepare
+	appKey := utils.GenerateUniqueKey("app-promote-mapping")
+	utils.CreateBasicApplication(t, appKey)
+	defer utils.DeleteApplication(t, appKey)
+
+	testPackage := utils.GetTestPackage(t)
+	version := "1.0.60"
+
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+		testPackage.PackageType, testPackage.PackageName, testPackage.PackageVersion, testPackage.RepoKey)
+	err := utils.AppTrustCli.Exec("version-create", appKey, version, packageFlag)
+	require.NoError(t, err)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
+
+	// Execute - promote with path mapping flags
+	targetStage := "DEV"
+	err = utils.AppTrustCli.Exec("version-promote", appKey, version, targetStage,
+		`--path-mapping=input=(.*), output=promoted/$1, package-type=.*`)
+	require.NoError(t, err)
+
+	// Assert - promotion succeeded with mappings applied
+	versionContent, statusCode, err := utils.GetApplicationVersion(appKey, version)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, statusCode)
+	require.NotNil(t, versionContent)
+	assert.Equal(t, appKey, versionContent.ApplicationKey)
+	assert.Equal(t, version, versionContent.Version)
+	assert.Equal(t, targetStage, versionContent.CurrentStage)
+}
+
+func TestPromoteVersion_WithPathMappings_InvalidRegex(t *testing.T) {
+	t.Skip("Skipping until path-mapping backend is deployed")
+	// Prepare
+	appKey := utils.GenerateUniqueKey("app-promote-map-err")
+	utils.CreateBasicApplication(t, appKey)
+	defer utils.DeleteApplication(t, appKey)
+
+	testPackage := utils.GetTestPackage(t)
+	version := "1.0.61"
+
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+		testPackage.PackageType, testPackage.PackageName, testPackage.PackageVersion, testPackage.RepoKey)
+	err := utils.AppTrustCli.Exec("version-create", appKey, version, packageFlag)
+	require.NoError(t, err)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
+
+	targetStage := "DEV"
+	err = utils.AppTrustCli.Exec("version-promote", appKey, version, targetStage,
+		`--path-mapping=input=[unclosed, output=target/$1`)
+	assert.Error(t, err)
+}
+
 func TestReleaseVersion(t *testing.T) {
 	// Prepare
 	appKey := utils.GenerateUniqueKey("app-version-release")

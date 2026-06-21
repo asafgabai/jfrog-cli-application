@@ -75,3 +75,55 @@ func ParseOverwriteStrategy(ctx *components.Context) (string, error) {
 	// Convert to uppercase for API request
 	return strings.ToUpper(validatedStrategy), nil
 }
+
+// ParsePathMappings extracts path mapping rules from the --path-mapping flag.
+// Format: "input=(.*), output=stable-release/$1[, package-type=.*]; input=(...), output=..."
+// Returns nil if flag is not provided.
+func ParsePathMappings(ctx *components.Context) (*model.PromotionModifications, error) {
+	const (
+		inputField       = "input"
+		outputField      = "output"
+		packageTypeField = "package-type"
+	)
+
+	flagValue := ctx.GetStringFlagValue(commands.PathMappingFlag)
+	if flagValue == "" {
+		return nil, nil
+	}
+
+	entries := utils.ParseSliceFlag(flagValue)
+	var mappings []model.PromotionPathMapping
+
+	for i, entry := range entries {
+		if entry == "" {
+			return nil, errorutils.CheckErrorf("--%s entry %d is empty", commands.PathMappingFlag, i+1)
+		}
+
+		entryMap, err := utils.ParseKeyValueString(entry, ",")
+		if err != nil {
+			return nil, errorutils.CheckErrorf("--%s entry %d: %s", commands.PathMappingFlag, i+1, err.Error())
+		}
+
+		input, hasInput := entryMap[inputField]
+		output, hasOutput := entryMap[outputField]
+
+		if !hasInput || input == "" {
+			return nil, errorutils.CheckErrorf("--%s entry %d: '%s' is required", commands.PathMappingFlag, i+1, inputField)
+		}
+		if !hasOutput || output == "" {
+			return nil, errorutils.CheckErrorf("--%s entry %d: '%s' is required", commands.PathMappingFlag, i+1, outputField)
+		}
+
+		mapping := model.PromotionPathMapping{
+			Input:  input,
+			Output: output,
+		}
+		if pt, ok := entryMap[packageTypeField]; ok {
+			mapping.PackageType = pt
+		}
+
+		mappings = append(mappings, mapping)
+	}
+
+	return &model.PromotionModifications{Mappings: mappings}, nil
+}
