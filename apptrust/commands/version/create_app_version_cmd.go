@@ -20,12 +20,13 @@ import (
 )
 
 type createAppVersionCommand struct {
-	versionService versions.VersionService
-	serverDetails  *coreConfig.ServerDetails
-	requestPayload *model.CreateAppVersionRequest
-	sync           bool
-	dryRun         bool
-	responseBody   []byte
+	versionService     versions.VersionService
+	serverDetails      *coreConfig.ServerDetails
+	requestPayload     *model.CreateAppVersionRequest
+	sync               bool
+	dryRun             bool
+	conflictResolution string
+	responseBody       []byte
 }
 
 func (cv *createAppVersionCommand) Run() error {
@@ -34,7 +35,7 @@ func (cv *createAppVersionCommand) Run() error {
 		return err
 	}
 
-	cv.responseBody, err = cv.versionService.CreateAppVersion(ctx, cv.requestPayload, cv.sync, cv.dryRun)
+	cv.responseBody, err = cv.versionService.CreateAppVersion(ctx, cv.requestPayload, cv.sync, cv.dryRun, cv.conflictResolution)
 	return err
 }
 
@@ -61,6 +62,10 @@ func (cv *createAppVersionCommand) prepareAndRunCommand(ctx *components.Context)
 		return err
 	}
 	cv.dryRun = ctx.GetBoolFlagValue(commands.DryRunFlag)
+	cv.conflictResolution, err = ParseConflictResolution(ctx)
+	if err != nil {
+		return err
+	}
 
 	outputFormat, err := ctx.GetOutputFormat()
 	if err != nil {
