@@ -22,6 +22,8 @@ type VersionService interface {
 	DeleteAppVersion(ctx service.Context, applicationKey string, version string) error
 	UpdateAppVersion(ctx service.Context, applicationKey string, version string, request *model.UpdateAppVersionRequest) ([]byte, error)
 	UpdateAppVersionSources(ctx service.Context, applicationKey string, version string, request *model.UpdateVersionSourcesRequest, sync bool, dryRun bool, failFast bool) ([]byte, error)
+	DistributeAppVersion(ctx service.Context, applicationKey string, version string, request *model.DistributeAppVersionRequest) error
+	RemoteDeleteAppVersion(ctx service.Context, applicationKey string, version string, request *model.RemoteDeleteAppVersionRequest) error
 }
 
 type versionService struct{}
@@ -156,6 +158,38 @@ func (vs *versionService) UpdateAppVersionSources(ctx service.Context, applicati
 
 	log.Info("Application version sources updated successfully.")
 	return responseBody, nil
+}
+
+func (vs *versionService) DistributeAppVersion(ctx service.Context, applicationKey, version string, request *model.DistributeAppVersionRequest) error {
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s/distribute", applicationKey, version)
+	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, nil)
+	if err != nil {
+		return err
+	}
+
+	if !apphttp.IsSuccessStatusCode(response.StatusCode) {
+		return fmt.Errorf("failed to distribute application version. Status code: %d. \n%s",
+			response.StatusCode, responseBody)
+	}
+
+	log.Info(fmt.Sprintf("Distribution of application version '%s/%s' triggered successfully.", applicationKey, version))
+	return nil
+}
+
+func (vs *versionService) RemoteDeleteAppVersion(ctx service.Context, applicationKey, version string, request *model.RemoteDeleteAppVersionRequest) error {
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s/remote-delete", applicationKey, version)
+	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, nil)
+	if err != nil {
+		return err
+	}
+
+	if !apphttp.IsSuccessStatusCode(response.StatusCode) {
+		return fmt.Errorf("failed to delete application version remotely. Status code: %d. \n%s",
+			response.StatusCode, responseBody)
+	}
+
+	log.Info(fmt.Sprintf("Remote deletion of application version '%s/%s' triggered successfully.", applicationKey, version))
+	return nil
 }
 
 func logSuccessMessage(sync bool, request *model.CreateAppVersionRequest, dryRun bool) {

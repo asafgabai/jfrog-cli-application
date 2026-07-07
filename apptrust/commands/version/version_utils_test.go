@@ -1,6 +1,8 @@
 package version
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands"
@@ -311,6 +313,199 @@ func TestParsePathMappings(t *testing.T) {
 
 			require.NoError(t, err)
 			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestValidateDistributionFlags(t *testing.T) {
+	tests := []struct {
+		name        string
+		distRules   bool
+		site        bool
+		city        bool
+		country     bool
+		expectError bool
+	}{
+		{
+			name: "no flags",
+		},
+		{
+			name:      "dist-rules only",
+			distRules: true,
+		},
+		{
+			name:    "site/city/country only",
+			site:    true,
+			city:    true,
+			country: true,
+		},
+		{
+			name:        "dist-rules with site",
+			distRules:   true,
+			site:        true,
+			expectError: true,
+		},
+		{
+			name:        "dist-rules with city",
+			distRules:   true,
+			city:        true,
+			expectError: true,
+		},
+		{
+			name:        "dist-rules with country-codes",
+			distRules:   true,
+			country:     true,
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &components.Context{}
+			if tt.distRules {
+				ctx.AddStringFlag(commands.DistRulesFlag, "rules.json")
+			}
+			if tt.site {
+				ctx.AddStringFlag(commands.SiteFlag, "edge-*")
+			}
+			if tt.city {
+				ctx.AddStringFlag(commands.CityFlag, "NYC")
+			}
+			if tt.country {
+				ctx.AddStringFlag(commands.CountryCodesFlag, "US")
+			}
+
+			err := ValidateDistributionFlags(ctx)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestParseDistributionRules(t *testing.T) {
+	t.Run("from site/city/country flags", func(t *testing.T) {
+		ctx := &components.Context{}
+		ctx.AddStringFlag(commands.SiteFlag, "edge-*")
+		ctx.AddStringFlag(commands.CityFlag, "NYC")
+		ctx.AddStringFlag(commands.CountryCodesFlag, "US;CA")
+
+		rules, err := ParseDistributionRules(ctx)
+		require.NoError(t, err)
+		expected := []model.DistributionRule{
+			{SiteName: "edge-*", CityName: "NYC", CountryCodes: []string{"US", "CA"}},
+		}
+		assert.Equal(t, expected, rules)
+	})
+
+	t.Run("no flags defaults to distributing to all targets", func(t *testing.T) {
+		ctx := &components.Context{}
+
+		rules, err := ParseDistributionRules(ctx)
+		require.NoError(t, err)
+		expected := []model.DistributionRule{
+			{SiteName: "*"},
+		}
+		assert.Equal(t, expected, rules)
+	})
+
+	t.Run("from dist-rules file", func(t *testing.T) {
+		content := `{"distribution_rules":[{"site_name":"site-1","city_name":"city-1","country_codes":["US"]},{"site_name":"site-2"}]}`
+		filePath := filepath.Join(t.TempDir(), "dist-rules.json")
+		require.NoError(t, os.WriteFile(filePath, []byte(content), 0o600))
+
+		ctx := &components.Context{}
+		ctx.AddStringFlag(commands.DistRulesFlag, filePath)
+
+		rules, err := ParseDistributionRules(ctx)
+		require.NoError(t, err)
+		expected := []model.DistributionRule{
+			{SiteName: "site-1", CityName: "city-1", CountryCodes: []string{"US"}},
+			{SiteName: "site-2"},
+		}
+		assert.Equal(t, expected, rules)
+	})
+
+	t.Run("empty dist-rules file returns no rules", func(t *testing.T) {
+		content := `{"distribution_rules":[]}`
+		filePath := filepath.Join(t.TempDir(), "dist-rules.json")
+		require.NoError(t, os.WriteFile(filePath, []byte(content), 0o600))
+
+		ctx := &components.Context{}
+		ctx.AddStringFlag(commands.DistRulesFlag, filePath)
+
+		rules, err := ParseDistributionRules(ctx)
+		require.NoError(t, err)
+		assert.Empty(t, rules)
+	})
+
+	t.Run("missing dist-rules file returns error", func(t *testing.T) {
+		ctx := &components.Context{}
+		ctx.AddStringFlag(commands.DistRulesFlag, filepath.Join(t.TempDir(), "does-not-exist.json"))
+
+		_, err := ParseDistributionRules(ctx)
+		assert.Error(t, err)
+	})
+}
+
+func TestParseDistributionModifications(t *testing.T) {
+	tests := []struct {
+		name        string
+		pattern     string
+		target      string
+		expected    []model.DistributionPathMapping
+		expectError bool
+	}{
+		{
+			name:     "no mapping flags",
+			expected: nil,
+		},
+		{
+			name:    "pattern and target provided",
+			pattern: "my-repo/(*)",
+			target:  "edge/{1}",
+			expected: []model.DistributionPathMapping{
+				{Input: "^my-repo/(.*)$", Output: "edge/$1"},
+			},
+		},
+		{
+			name:        "only pattern provided",
+			pattern:     "my-repo/(*)",
+			expectError: true,
+		},
+		{
+			name:        "only target provided",
+			target:      "edge/{1}",
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &components.Context{}
+			if tt.pattern != "" {
+				ctx.AddStringFlag(commands.MappingPatternFlag, tt.pattern)
+			}
+			if tt.target != "" {
+				ctx.AddStringFlag(commands.MappingTargetFlag, tt.target)
+			}
+
+			result, err := ParseDistributionModifications(ctx)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			if tt.expected == nil {
+				assert.Nil(t, result)
+				return
+			}
+			require.NotNil(t, result)
+			assert.Equal(t, tt.expected, result.PathMappings)
 		})
 	}
 }
