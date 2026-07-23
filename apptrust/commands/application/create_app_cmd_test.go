@@ -22,6 +22,7 @@ func TestCreateAppCommand_Run_Flags(t *testing.T) {
 	description := "Test application"
 	businessCriticality := "high"
 	maturityLevel := "production"
+	monitorPolicyValue := 5
 
 	ctx := &components.Context{
 		Arguments: []string{"app-key"},
@@ -34,6 +35,7 @@ func TestCreateAppCommand_Run_Flags(t *testing.T) {
 	ctx.AddStringFlag("labels", "env=prod;region=us-east")
 	ctx.AddStringFlag("user-owners", "john.doe;jane.smith")
 	ctx.AddStringFlag("group-owners", "devops;security")
+	ctx.AddStringFlag("monitor-policy", "type=version_count, value=5")
 	ctx.AddStringFlag("url", "https://example.com")
 
 	requestPayload := &model.AppDescriptor{
@@ -47,8 +49,9 @@ func TestCreateAppCommand_Run_Flags(t *testing.T) {
 			{Key: "env", Value: "prod"},
 			{Key: "region", Value: "us-east"},
 		},
-		UserOwners:  &[]string{"john.doe", "jane.smith"},
-		GroupOwners: &[]string{"devops", "security"},
+		UserOwners:    &[]string{"john.doe", "jane.smith"},
+		GroupOwners:   &[]string{"devops", "security"},
+		MonitorPolicy: &model.MonitorPolicy{Type: model.MonitorPolicyTypeVersionCount, Value: &monitorPolicyValue},
 	}
 
 	mockAppService := mockapps.NewMockApplicationService(ctrl)

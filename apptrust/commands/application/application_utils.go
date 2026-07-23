@@ -84,5 +84,13 @@ func populateApplicationFromFlags(ctx *components.Context, descriptor *model.App
 		descriptor.GroupOwners = &groupOwners
 	}
 
+	if ctx.IsFlagSet(commands.MonitorPolicyFlag) {
+		monitorPolicy, err := utils.ParseMonitorPolicyFlag(ctx.GetStringFlagValue(commands.MonitorPolicyFlag))
+		if err != nil {
+			return fmt.Errorf("failed to parse --%s: %w", commands.MonitorPolicyFlag, err)
+		}
+		descriptor.MonitorPolicy = monitorPolicy
+	}
+
 	return nil
 }

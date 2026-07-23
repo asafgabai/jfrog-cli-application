@@ -111,6 +111,8 @@ func TestUpdateAppCommand_WrongNumberOfArguments(t *testing.T) {
 }
 
 func TestUpdateAppCommand_FlagsSuite(t *testing.T) {
+	monitorPolicyValue := 5
+
 	tests := []struct {
 		name           string
 		ctxSetup       func(*components.Context)
@@ -253,6 +255,17 @@ func TestUpdateAppCommand_FlagsSuite(t *testing.T) {
 						{Key: "old-label", Value: "old-value"},
 					},
 				},
+			},
+		},
+		{
+			name: "monitor-policy",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key"}
+				ctx.AddStringFlag(commands.MonitorPolicyFlag, "type=version_count, value=5")
+			},
+			expectsPayload: &model.AppDescriptor{
+				ApplicationKey: "app-key",
+				MonitorPolicy:  &model.MonitorPolicy{Type: model.MonitorPolicyTypeVersionCount, Value: &monitorPolicyValue},
 			},
 		},
 		{
