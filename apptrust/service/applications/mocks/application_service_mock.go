@@ -70,6 +70,35 @@ func (mr *MockApplicationServiceMockRecorder) DeleteApplication(ctx, application
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteApplication", reflect.TypeOf((*MockApplicationService)(nil).DeleteApplication), ctx, applicationKey)
 }
 
+// ExportApplication mocks base method.
+func (m *MockApplicationService) ExportApplication(ctx service.Context, applicationKey string) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExportApplication", ctx, applicationKey)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExportApplication indicates an expected call of ExportApplication.
+func (mr *MockApplicationServiceMockRecorder) ExportApplication(ctx, applicationKey any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportApplication", reflect.TypeOf((*MockApplicationService)(nil).ExportApplication), ctx, applicationKey)
+}
+
+// ImportApplication mocks base method.
+func (m *MockApplicationService) ImportApplication(ctx service.Context, applicationEnvelope []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ImportApplication", ctx, applicationEnvelope)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ImportApplication indicates an expected call of ImportApplication.
+func (mr *MockApplicationServiceMockRecorder) ImportApplication(ctx, applicationEnvelope any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImportApplication", reflect.TypeOf((*MockApplicationService)(nil).ImportApplication), ctx, applicationEnvelope)
+}
+
 // UpdateApplication mocks base method.
 func (m *MockApplicationService) UpdateApplication(ctx service.Context, requestBody *model.AppDescriptor) ([]byte, error) {
 	m.ctrl.T.Helper()
