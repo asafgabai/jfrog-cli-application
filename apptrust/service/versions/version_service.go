@@ -27,6 +27,7 @@ type VersionService interface {
 	RemoteDeleteAppVersion(ctx service.Context, applicationKey string, version string, request *model.RemoteDeleteAppVersionRequest) error
 	TriggerExport(ctx service.Context, applicationKey string, version string) error
 	GetExportStatus(ctx service.Context, applicationKey string, version string) (*model.AppVersionExportStatus, error)
+	ImportAppVersion(ctx service.Context, applicationKey string, archivePath string, options *model.ImportAppVersionOptions) ([]byte, error)
 }
 
 type versionService struct{}
@@ -228,6 +229,30 @@ func (vs *versionService) GetExportStatus(ctx service.Context, applicationKey, v
 	}
 
 	return &status, nil
+}
+
+func (vs *versionService) ImportAppVersion(ctx service.Context, applicationKey, archivePath string, options *model.ImportAppVersionOptions) ([]byte, error) {
+	optionsJSON, err := json.Marshal(options)
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions/import", applicationKey)
+	parts := []apphttp.MultipartPart{
+		{Name: "options", ContentType: "application/json", Body: optionsJSON},
+		{Name: "file", ContentType: "application/zip", Path: archivePath},
+	}
+	response, responseBody, err := ctx.GetHttpClient().PostMultipart(endpoint, parts, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if response.StatusCode != http.StatusAccepted {
+		return nil, fmt.Errorf("failed to import application version. Status code: %d. \n%s",
+			response.StatusCode, responseBody)
+	}
+
+	return responseBody, nil
 }
 
 func logSuccessMessage(sync bool, request *model.CreateAppVersionRequest, dryRun bool) {

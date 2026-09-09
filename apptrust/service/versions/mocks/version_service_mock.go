@@ -99,6 +99,21 @@ func (mr *MockVersionServiceMockRecorder) GetExportStatus(ctx, applicationKey, v
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExportStatus", reflect.TypeOf((*MockVersionService)(nil).GetExportStatus), ctx, applicationKey, version)
 }
 
+// ImportAppVersion mocks base method.
+func (m *MockVersionService) ImportAppVersion(ctx service.Context, applicationKey, archivePath string, options *model.ImportAppVersionOptions) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ImportAppVersion", ctx, applicationKey, archivePath, options)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ImportAppVersion indicates an expected call of ImportAppVersion.
+func (mr *MockVersionServiceMockRecorder) ImportAppVersion(ctx, applicationKey, archivePath, options any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImportAppVersion", reflect.TypeOf((*MockVersionService)(nil).ImportAppVersion), ctx, applicationKey, archivePath, options)
+}
+
 // PromoteAppVersion mocks base method.
 func (m *MockVersionService) PromoteAppVersion(ctx service.Context, applicationKey, version string, payload *model.PromoteAppVersionRequest, sync bool) ([]byte, error) {
 	m.ctrl.T.Helper()

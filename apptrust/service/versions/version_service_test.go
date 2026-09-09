@@ -1,11 +1,13 @@
 package versions
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
 	"testing"
 
+	apphttp "github.com/jfrog/jfrog-cli-application/apptrust/http"
 	mockhttp "github.com/jfrog/jfrog-cli-application/apptrust/http/mocks"
 	mockservice "github.com/jfrog/jfrog-cli-application/apptrust/service/mocks"
 	"go.uber.org/mock/gomock"
@@ -992,6 +994,74 @@ func TestGetExportStatus(t *testing.T) {
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expectedStatus, status)
+			} else {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			}
+		})
+	}
+}
+
+func TestImportAppVersion(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	service := NewVersionService()
+	options := &model.ImportAppVersionOptions{Mode: "path_mapping"}
+	optionsJSON, err := json.Marshal(options)
+	assert.NoError(t, err)
+	archivePath := "/tmp/archive.zip"
+	expectedParts := []apphttp.MultipartPart{
+		{Name: "options", ContentType: "application/json", Body: optionsJSON},
+		{Name: "file", ContentType: "application/zip", Path: archivePath},
+	}
+
+	tests := []struct {
+		name             string
+		applicationKey   string
+		mockResponse     *http.Response
+		mockResponseBody string
+		mockError        error
+		expectedError    string
+		expectedBody     string
+	}{
+		{
+			name:             "success",
+			applicationKey:   "test-app",
+			mockResponse:     &http.Response{StatusCode: http.StatusAccepted},
+			mockResponseBody: `{"name":"test-app","version":"1.0.0"}`,
+			expectedBody:     `{"name":"test-app","version":"1.0.0"}`,
+		},
+		{
+			name:             "failure",
+			applicationKey:   "test-app",
+			mockResponse:     &http.Response{StatusCode: http.StatusBadRequest},
+			mockResponseBody: "application key does not match archive",
+			expectedError:    "failed to import application version",
+		},
+		{
+			name:           "http client error",
+			applicationKey: "test-app",
+			mockResponse:   nil,
+			mockError:      errors.New("http client error"),
+			expectedError:  "http client error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			expectedEndpoint := "/v1/applications/" + tt.applicationKey + "/versions/import"
+			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
+			mockHttpClient.EXPECT().PostMultipart(expectedEndpoint, expectedParts, nil).
+				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
+
+			mockCtx := mockservice.NewMockContext(ctrl)
+			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
+
+			body, err := service.ImportAppVersion(mockCtx, tt.applicationKey, archivePath, options)
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedBody, string(body))
 			} else {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.expectedError)
