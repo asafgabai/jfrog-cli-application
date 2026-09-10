@@ -89,7 +89,6 @@ const (
 const (
 	DefaultDownloadMinSplitKb = 5120
 	DefaultDownloadSplitCount = 3
-	DownloadMaxSplitCount     = 15
 )
 
 // Flag keys mapped to their corresponding components.Flag definition.

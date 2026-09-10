@@ -32,6 +32,8 @@ const (
 
 	exportPollInterval = 10 * time.Second
 	exportPollTimeout  = 60 * time.Minute
+
+	downloadMaxSplitCount = 15
 )
 
 type exportAppVersionCommand struct {
@@ -172,8 +174,8 @@ func parseExportDownloadFlags(ctx *components.Context) (minSplitSize int64, spli
 		if err != nil {
 			return 0, 0, fmt.Errorf("the '--%s' option should have a numeric value", commands.SplitCountFlag)
 		}
-		if splitCount > commands.DownloadMaxSplitCount {
-			return 0, 0, fmt.Errorf("the '--%s' option value is limited to a maximum of %d", commands.SplitCountFlag, commands.DownloadMaxSplitCount)
+		if splitCount > downloadMaxSplitCount {
+			return 0, 0, fmt.Errorf("the '--%s' option value is limited to a maximum of %d", commands.SplitCountFlag, downloadMaxSplitCount)
 		}
 		if splitCount < 0 {
 			return 0, 0, fmt.Errorf("the '--%s' option cannot have a negative value", commands.SplitCountFlag)
