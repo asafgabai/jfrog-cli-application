@@ -21,6 +21,7 @@ const (
 	VersionDistribute    = "version-distribute"
 	VersionRemoteDelete  = "version-delete-remote"
 	VersionExport        = "version-export"
+	VersionImport        = "version-import"
 	PackageBind          = "package-bind"
 	PackageUnbind        = "package-unbind"
 	AppCreate            = "app-create"
@@ -82,6 +83,7 @@ const (
 	QuietFlag                         = "quiet"
 	MinSplitFlag                      = "min-split"
 	SplitCountFlag                    = "split-count"
+	UnpromotedFlag                    = "unpromoted"
 )
 
 const (
@@ -144,6 +146,7 @@ var flagsMap = map[string]components.Flag{
 	QuietFlag:                         components.NewBoolFlag(QuietFlag, "Set to true to skip the confirmation message. When $CI is true, the default value is true.", components.WithBoolDefaultValueFalse()),
 	MinSplitFlag:                      components.NewStringFlag(MinSplitFlag, "Minimum file size in KB to split into ranges when downloading. Set to -1 for no splits.", func(f *components.StringFlag) { f.DefaultValue = strconv.Itoa(DefaultDownloadMinSplitKb) }),
 	SplitCountFlag:                    components.NewStringFlag(SplitCountFlag, "Number of parts to split a file when downloading. Set to 0 for no splits.", func(f *components.StringFlag) { f.DefaultValue = strconv.Itoa(DefaultDownloadSplitCount) }),
+	UnpromotedFlag:                    components.NewBoolFlag(UnpromotedFlag, "Import the version without placing its artifacts in any repository.", components.WithBoolDefaultValueFalse()),
 }
 
 var commandFlags = map[string][]string{
@@ -268,6 +271,15 @@ var commandFlags = map[string][]string{
 		serverId,
 		MinSplitFlag,
 		SplitCountFlag,
+	},
+	VersionImport: {
+		url,
+		user,
+		accessToken,
+		serverId,
+		MappingPatternFlag,
+		MappingTargetFlag,
+		UnpromotedFlag,
 	},
 
 	PackageBind: {
